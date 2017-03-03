@@ -20,7 +20,7 @@
       var coord_div = document.getElementById( 'coord' )
       var scene = new THREE.Scene();
 
-      var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+      var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.01, 10 );
       var clock = new THREE.Clock()
 
       var renderer = new THREE.WebGLRenderer();
@@ -36,7 +36,7 @@
       var ico = new THREE.LineSegments( new THREE.WireframeGeometry( geometry ) );
       scene.add( ico );
 
-      camera.position.z = 1.8;
+      camera.position.z = 1.1;
       DEBUG.init( scene );
       VIEWER.init( camera, renderer, ico.position, scene );
 

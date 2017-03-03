@@ -4,6 +4,7 @@ var INPUT = {
     this.currentPos = new THREE.Vector2();
     this.drag = false;
     this.oldPos = new THREE.Vector2();
+    this.zoom = 0;
 
     document.addEventListener( 'mousedown', function( evt ) {
       evt.preventDefault();
@@ -19,6 +20,11 @@ var INPUT = {
     document.addEventListener( 'mousemove', function( evt ) {
       evt.preventDefault();
       inpObj._fromEvent( evt );
+    } );
+
+    document.addEventListener( 'wheel', function( evt ) {
+      evt.preventDefault();
+      inpObj.zoom = evt.deltaY;
     } );
 
     document.addEventListener( 'touchstart', function( evt ) {
@@ -55,6 +61,12 @@ var INPUT = {
     var delta = new THREE.Vector2();
     delta.subVectors( this.oldPos, this.currentPos );
     this.oldPos.copy( this.currentPos );
+    return delta;
+  },
+
+  zoomDelta: function() {
+    var delta = this.zoom;
+    this.zoom = 0;
     return delta;
   },
 
