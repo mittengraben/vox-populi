@@ -69,27 +69,12 @@ var VIEWER = {
   },
 
   applyZoom: function( dt ) {
-    var delta = INPUT.zoomDelta();
     var worldSphere = WORLD.boundingSphere;
     var eye = this.camera.position.clone().sub( worldSphere.center );
+    this.inertia.targetDistance = 1.8 * INPUT.zoom;
 
-    if ( Math.abs(delta) > 0 ) {
-        this.inertia.distanceAnimation = 0.0;
-        this.inertia.targetDistance = eye.length() * ( 1 + delta * 0.001 );
-        if ( this.inertia.targetDistance < 1.1 ) {
-          this.inertia.targetDistance = 1.1;
-        };
-        if ( this.inertia.targetDistance > 2 ) {
-          this.inertia.targetDistance = 2;
-        };
-    };
-
-    if ( this.inertia.distanceAnimation < 1.0 ) {
-      var targetEye = eye.clone().normalize().multiplyScalar( this.inertia.targetDistance );
-      eye.lerp( targetEye, this.inertia.distanceAnimation );
-      this.inertia.distanceAnimation += dt / 0.2;
-      this.camera.position.copy( worldSphere.center ).add( eye );
-    };
+    var targetEye = eye.clone().normalize().multiplyScalar( this.inertia.targetDistance );
+    this.camera.position.copy( worldSphere.center ).add( targetEye );
   },
 
   update: function( dt ) {

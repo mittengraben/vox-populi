@@ -4,7 +4,8 @@ var INPUT = {
     this.currentPos = new THREE.Vector2();
     this.drag = false;
     this.oldPos = new THREE.Vector2();
-    this.zoom = 0;
+    this.touchDist = 0.0;
+    this.zoom = 1.0;
 
     document.addEventListener( 'mousedown', function( evt ) {
       evt.preventDefault();
@@ -19,21 +20,30 @@ var INPUT = {
 
     document.addEventListener( 'mousemove', function( evt ) {
       evt.preventDefault();
-      inpObj._fromEvent( evt );
+      inpObj._fromEvent( evt, inpObj.currentPos );
     } );
 
     document.addEventListener( 'wheel', function( evt ) {
       evt.preventDefault();
-      inpObj.zoom = evt.deltaY;
+      inpObj.zoom = inpObj.zoom + evt.deltaY * 0.001;
+      inpObj._clampZoom()
     } );
 
     document.addEventListener( 'touchstart', function( evt ) {
       evt.preventDefault();
-      if ( evt.touches.length > 0 ) {
-          inpObj._fromEvent( evt.touches[0] );
+      if ( evt.touches.length == 1 ) {
+          inpObj._fromEvent( evt.touches[0], inpObj.currentPos );
           inpObj.drag = true;
           inpObj.oldPos.copy( inpObj.currentPos );
       };
+      if ( evt.touches.length == 2 ) {
+          inpObj.drag = false;
+          var tp = [ new THREE.Vector2(), new THREE.Vector2() ]
+          for ( var i = 0; i < 2; i++ ) {
+            inpObj._fromEvent( evt.touches[i], tp[i] );
+          };
+          inpObj.touchDist = tp[0].distanceTo( tp[1] );
+      }
     } );
 
     document.addEventListener( 'touchend', function( evt ) {
@@ -48,9 +58,19 @@ var INPUT = {
 
     document.addEventListener( 'touchmove', function( evt ) {
       evt.preventDefault();
-      if ( evt.touches.length > 0 ) {
-          inpObj._fromEvent( evt.touches[0] );
+      if ( evt.touches.length == 1 ) {
+          inpObj._fromEvent( evt.touches[0], inpObj.currentPos );
       };
+      if ( evt.touches.length == 2 ) {
+        var tp = [ new THREE.Vector2(), new THREE.Vector2() ]
+        for ( var i = 0; i < 2; i++ ) {
+          inpObj._fromEvent( evt.touches[i], tp[i] );
+        };
+        var touchDist = tp[0].distanceTo( tp[1] );
+        inpObj.zoom = inpObj.zoom * (inpObj.touchDist / touchDist);
+        inpObj._clampZoom();
+        inpObj.touchDist = touchDist;
+      }
     } );
   },
 
@@ -64,15 +84,14 @@ var INPUT = {
     return delta;
   },
 
-  zoomDelta: function() {
-    var delta = this.zoom;
-    this.zoom = 0;
-    return delta;
+  _clampZoom: function() {
+    if ( this.zoom < 0.6 ) this.zoom = 0.6;
+    if ( this.zoom > 1.1 ) this.zoom = 1.1;
   },
 
-  _fromEvent: function( src ) {
-    this.currentPos.x = ( src.clientX / window.innerWidth ) * 2 - 1;
-    this.currentPos.y = - ( src.clientY / window.innerHeight ) * 2 + 1;
+  _fromEvent: function( src, target ) {
+    target.x = ( src.clientX / window.innerWidth ) * 2 - 1;
+    target.y = - ( src.clientY / window.innerHeight ) * 2 + 1;
   }
 }
 
