@@ -6,47 +6,50 @@
     <style>
       body { margin: 0; }
       canvas { width: 100%; height: 100% }
+      #serv-status { position: fixed; top: 5px; right: 5px; color: green }
     </style>
   </head>
   <body>
+    <div id="serv-status">...</div>
+    <script src="//rawgit.com/msgpack/msgpack-javascript/master/msgpack.js"></script>
     <script src="//rawgit.com/mrdoob/stats.js/master/build/stats.min.js"></script>
     <script src="//rawgit.com/mrdoob/three.js/master/build/three.min.js"></script>
     <script src="js/debug.js"></script>
+    <script src="js/client.js"></script>
     <script src="js/world.js"></script>
     <script src="js/input.js"></script>
     <script src="js/viewer.js"></script>
-    <script src="js/ico.js"></script>
     <script>
-      var coord_div = document.getElementById( 'coord' )
+      document.documentElement.style.overflow = 'hidden';
       var scene = new THREE.Scene();
 
+      WORLD.init( scene );
+      DEBUG.init( scene );
+
       var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.01, 10 );
+      camera.position.z = 1.1;
+
       var clock = new THREE.Clock()
 
       var renderer = new THREE.WebGLRenderer();
       renderer.setPixelRatio( window.devicePixelRatio );
       renderer.setSize( window.innerWidth, window.innerHeight );
-
       document.body.appendChild( renderer.domElement );
 
-      var geometry = new THREE.BufferGeometry();
-      geometry.setIndex( new THREE.BufferAttribute( hexsphere_indicies, 1 ) );
-      geometry.addAttribute( 'position', new THREE.BufferAttribute( hexsphere_position, 3 ) );
-      var material = new THREE.MeshBasicMaterial( { color: 0x0000ff } );
-      var ico = new THREE.LineSegments( new THREE.WireframeGeometry( geometry ) );
-      scene.add( ico );
+      var stats = new Stats();
+      document.body.appendChild( stats.dom );
 
-      camera.position.z = 1.1;
-      DEBUG.init( scene );
-      VIEWER.init( camera, renderer, ico.position, scene );
+      VIEWER.init( camera, renderer, WORLD.boundingSphere.center, scene );
 
       function render() {
         dt = clock.getDelta();
         requestAnimationFrame( render );
         VIEWER.update( dt );
+        stats.update();
         renderer.render( scene, camera );
       }
       render();
+
     </script>
   </body>
 </html>

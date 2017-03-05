@@ -225,26 +225,22 @@ class HexSphere(object):
         self.faces = new_faces
 
     def _emit_vertices(self, name='hexsphere_position'):
-        print('var {} = new Float32Array(['.format(name))
+        vertices = []
         for vertex in _Point._container:
-            print(
-                '\t{:.6g}, {:.6g}, {:.6g},'
-                .format(vertex.x, vertex.y, vertex.z)
-            )
-        print(']);')
+            vertices.extend((vertex.x, vertex.y, vertex.z))
+        return vertices
 
     def _emit_faces(self, name='hexsphere_indicies'):
-        print('var {} = new Uint32Array(['.format(name))
+        indicies = []
         for face in self.faces:
-            print(
-                '\t{}, {}, {},'
-                .format(face.v1, face.v2, face.v3)
-            )
-        print(']);')
+            indicies.extend((face.v1, face.v2, face.v3))
+        return indicies
 
     def emit(self):
-        self._emit_vertices()
-        self._emit_faces()
+        return {
+            'position': self._emit_vertices(),
+            'indicies': self._emit_faces()
+        }
 
 
 if __name__ == '__main__':
