@@ -45,6 +45,7 @@
         dt = clock.getDelta();
         requestAnimationFrame( render );
         VIEWER.update( dt );
+        WORLD.update( dt );
         stats.update();
         renderer.render( scene, camera );
       }

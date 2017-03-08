@@ -2,21 +2,42 @@
 import math
 
 
+def _normalize(x, y, z):
+    magnitude = math.sqrt(
+        x * x +
+        y * y +
+        z * z
+    )
+    return (
+        x / magnitude,
+        y / magnitude,
+        z / magnitude
+    )
+
+
 class _Point(object):
     __slots__ = ['x', 'y', 'z', 'index']
 
     _container = []
+    _dual = []
     _midpoints = {}
 
-    def __init__(self, x, y, z):
+    def __init__(self, x, y, z, container=None):
         super(_Point, self).__init__()
+        if container is None:
+            container = _Point._container
+
         self.x, self.y, self.z = x, y, z
-        self.index = len(_Point._container)
-        _Point._container.append(self)
+        self.index = len(container)
+        container.append(self)
 
     @classmethod
     def from_index(cls, index):
         return cls._container[index]
+
+    @classmethod
+    def dual_from_index(cls, index):
+        return cls._dual[index]
 
     def __repr__(self):
         return '<Point {}>'.format(
@@ -24,14 +45,7 @@ class _Point(object):
         )
 
     def reproject(self):  # i.e. normalize
-        magnitude = math.sqrt(
-            self.x * self.x +
-            self.y * self.y +
-            self.z * self.z
-        )
-        self.x = self.x / magnitude
-        self.y = self.y / magnitude
-        self.z = self.z / magnitude
+        self.x, self.y, self.z = _normalize(self.x, self.y, self.z)
 
     @staticmethod
     def sphere_midpoint(p1, p2):
@@ -82,7 +96,8 @@ class _Face(object):
         centroid = _Point(
             (v1.x + v2.x + v3.x) / 3.0,
             (v1.y + v2.y + v3.y) / 3.0,
-            (v1.z + v2.z + v3.z) / 3.0
+            (v1.z + v2.z + v3.z) / 3.0,
+            _Point._dual
         )
         centroid.reproject()
         self.centroid = centroid.index
@@ -113,13 +128,68 @@ class _Face(object):
         )
 
 
-class _Tile(object):
-    __slots__ = ['triangles', 'id']
+class Edge(object):
+    __slots__ = ['p1', 'p2', 'neighbour', 'tile']
+    _container = {}
 
-    def __init__(self, identifier):
-        super(_Tile, self).__init__()
-        self.triangles = []
-        self.id = identifier
+    def __init__(self, p1, p2):
+        super(Edge, self).__init__()
+        self.p1 = p1
+        self.p2 = p2
+        self.tile = None
+        self.neighbour = None
+
+        key = tuple(sorted([p1, p2]))
+        Edge._container.setdefault(key, self)
+
+    @staticmethod
+    def neighbours(e1, e2):
+        e1.neighbour, e2.neighbour = e2, e1
+
+
+class Tile(object):
+    __slots__ = ['edges', 'center']
+
+    def __init__(self):
+        super(Tile, self).__init__()
+        self.center = None
+        self.edges = []
+
+    def add_edge(self, edge):
+        edge.tile = self
+        self.edges.append(edge)
+
+    def postprocess(self):
+        p1_dict = {e.p1: e for e in self.edges}
+
+        start_point = self.edges[0].p1
+        next_point = self.edges[0].p2
+        sorted_edges = [self.edges[0]]
+
+        while next_point != start_point:
+            edge = p1_dict[next_point]
+            sorted_edges.append(edge)
+            next_point = edge.p2
+        self.edges = sorted_edges
+
+        x, y, z = 0, 0, 0
+        for e in self.edges:
+            pt = _Point.dual_from_index(e.p1)
+            x += pt.x
+            y += pt.y
+            z += pt.z
+
+        count = len(self.edges)
+        self.center = (x / count, y / count, z / count)
+
+    def emit_faces(self):
+        # vertices = [e.p1 for e in self.edges]
+        # faces = []
+        # for index in range(1, len(self.edges) - 1):
+        #     faces.append(vertices[index + 1])
+        #     faces.append(vertices[index])
+        #     faces.append(vertices[0])
+        # return faces
 
 
 def icosahedron():
@@ -203,43 +273,57 @@ class HexSphere(object):
                     raise RuntimeError('Not exactly')
 
     def _make_dual(self):
-        new_faces = []
-
         for p1, p2, fa, fb in self._make_face_pairs():
             ac = fa.centroid
             bc = fb.centroid
 
-            f1 = _Face(p1, bc, ac)
-            f2 = _Face(p2, ac, bc)
+            e1 = Edge(bc, ac)
+            e2 = Edge(ac, bc)
 
-            new_faces.append(f1)
-            new_faces.append(f2)
+            Edge.neighbours(e1, e2)
 
             self.tiles.setdefault(
-                p1, _Tile(p1)
-            ).triangles.append(f1)
+                p1, Tile()
+            ).add_edge(e1)
             self.tiles.setdefault(
-                p2, _Tile(p2)
-            ).triangles.append(f2)
+                p2, Tile()
+            ).add_edge(e2)
 
-        self.faces = new_faces
+        for t in self.tiles.values():
+            t.postprocess()
 
-    def _emit_vertices(self, name='hexsphere_position'):
+        self.faces = []
+
+    def _emit_vertices(self):
         vertices = []
-        for vertex in _Point._container:
+        for vertex in _Point._dual:
             vertices.extend((vertex.x, vertex.y, vertex.z))
         return vertices
 
-    def _emit_faces(self, name='hexsphere_indicies'):
+    def _emit_faces(self):
         indicies = []
-        for face in self.faces:
-            indicies.extend((face.v1, face.v2, face.v3))
+        for tile in self.tiles.values():
+            indicies.extend(tile.emit_faces())
+        return indicies
+
+    def _emit_normals(self):
+        normals = []
+        for tile in self.tiles.values():
+            for _ in range(len(tile.edges) - 2):
+                normals.extend(_normalize(*tile.center))
+        return normals
+
+    def _emit_mesh(self):
+        indicies = []
+        for p1, p2 in Edge._container:
+            indicies.extend((p1, p2))
         return indicies
 
     def emit(self):
         return {
             'position': self._emit_vertices(),
-            'indicies': self._emit_faces()
+            'indicies': self._emit_faces(),
+            'mesh': self._emit_mesh()
         }
 
 
