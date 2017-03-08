@@ -19,25 +19,17 @@ class _Point(object):
     __slots__ = ['x', 'y', 'z', 'index']
 
     _container = []
-    _dual = []
     _midpoints = {}
 
-    def __init__(self, x, y, z, container=None):
+    def __init__(self, x, y, z):
         super(_Point, self).__init__()
-        if container is None:
-            container = _Point._container
-
         self.x, self.y, self.z = x, y, z
-        self.index = len(container)
-        container.append(self)
+        self.index = len(_Point._container)
+        _Point._container.append(self)
 
     @classmethod
     def from_index(cls, index):
         return cls._container[index]
-
-    @classmethod
-    def dual_from_index(cls, index):
-        return cls._dual[index]
 
     def __repr__(self):
         return '<Point {}>'.format(
@@ -96,8 +88,7 @@ class _Face(object):
         centroid = _Point(
             (v1.x + v2.x + v3.x) / 3.0,
             (v1.y + v2.y + v3.y) / 3.0,
-            (v1.z + v2.z + v3.z) / 3.0,
-            _Point._dual
+            (v1.z + v2.z + v3.z) / 3.0
         )
         centroid.reproject()
         self.centroid = centroid.index
@@ -174,21 +165,25 @@ class Tile(object):
 
         x, y, z = 0, 0, 0
         for e in self.edges:
-            pt = _Point.dual_from_index(e.p1)
+            pt = _Point.from_index(e.p1)
             x += pt.x
             y += pt.y
             z += pt.z
 
         count = len(self.edges)
-        self.center = (x / count, y / count, z / count)
+        center = _Point.from_index(self.center)
+        center.x = x / count
+        center.y = y / count
+        center.z = z / count
 
     def emit_faces(self):
         vertices = [e.p1 for e in self.edges]
+        vertices.append(vertices[0])
         faces = []
-        for index in range(1, len(self.edges) - 1):
+        for index in range(len(self.edges)):
+            faces.append(self.center)
             faces.append(vertices[index + 1])
             faces.append(vertices[index])
-            faces.append(vertices[0])
         return faces
 
 
@@ -285,9 +280,11 @@ class HexSphere(object):
             self.tiles.setdefault(
                 p1, Tile()
             ).add_edge(e1)
+            self.tiles[p1].center = p1
             self.tiles.setdefault(
                 p2, Tile()
             ).add_edge(e2)
+            self.tiles[p2].center = p2
 
         for t in self.tiles.values():
             t.postprocess()
@@ -296,7 +293,7 @@ class HexSphere(object):
 
     def _emit_vertices(self):
         vertices = []
-        for vertex in _Point._dual:
+        for vertex in _Point._container:
             vertices.extend((vertex.x, vertex.y, vertex.z))
         return vertices
 
@@ -305,13 +302,6 @@ class HexSphere(object):
         for tile in self.tiles.values():
             indicies.extend(tile.emit_faces())
         return indicies
-
-    def _emit_normals(self):
-        normals = []
-        for tile in self.tiles.values():
-            for _ in range(len(tile.edges) - 2):
-                normals.extend(_normalize(*tile.center))
-        return normals
 
     def _emit_mesh(self):
         indicies = []

@@ -33,7 +33,7 @@ var CLIENT = {
     };
     this.showStatus( 'Reconnecting...' );
 
-    this.socket = new WebSocket('wss://localhost:8888');
+    this.socket = new WebSocket('wss://192.168.1.35:8888');
     this.socket.binaryType = 'arraybuffer';
 
     _this = this;

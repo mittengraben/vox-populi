@@ -37,7 +37,7 @@ class WSInbox(object):
     def run(self):
         self.server = asyncio.get_event_loop().run_until_complete(
             websockets.serve(
-                self.handle_client, 'localhost', 8888, ssl=self.ssl_context
+                self.handle_client, '192.168.1.35', 8888, ssl=self.ssl_context
             )
         )
 
