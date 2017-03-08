@@ -183,13 +183,13 @@ class Tile(object):
         self.center = (x / count, y / count, z / count)
 
     def emit_faces(self):
-        # vertices = [e.p1 for e in self.edges]
-        # faces = []
-        # for index in range(1, len(self.edges) - 1):
-        #     faces.append(vertices[index + 1])
-        #     faces.append(vertices[index])
-        #     faces.append(vertices[0])
-        # return faces
+        vertices = [e.p1 for e in self.edges]
+        faces = []
+        for index in range(1, len(self.edges) - 1):
+            faces.append(vertices[index + 1])
+            faces.append(vertices[index])
+            faces.append(vertices[0])
+        return faces
 
 
 def icosahedron():
