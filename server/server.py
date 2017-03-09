@@ -1,8 +1,11 @@
 """Main server class"""
+import argparse
 import asyncio
+import json
 import logging
 import signal
 
+from .version import version
 from .world import World
 from .wsinbox import WSInbox
 
@@ -18,13 +21,28 @@ class Server(object):
         super(Server, self).__init__()
 
     def _setup(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument(
+            '-c', '--config',
+            default='./etc/config.json',
+        )
+        parser.add_argument(
+            '--version',
+            action='version',
+            version='v{}.{}.{}'.format(*version())
+        )
+        args = parser.parse_args()
+
+        with open(args.config, 'r') as config_file:
+            conf = json.load(config_file)
+
         logformat = (
             '%(process)d:%(asctime)s:%(levelname)s:%(name)s:%(message)s'
         )
         logging.basicConfig(level=logging.INFO, format=logformat)
 
-        self.world = World()
-        self.inbox = WSInbox(self.world)
+        self.world = World(conf)
+        self.inbox = WSInbox(conf, self.world)
         self.inbox.run()
 
     def run(self):

@@ -33,7 +33,7 @@ var CLIENT = {
     };
     this.showStatus( 'Reconnecting...' );
 
-    this.socket = new WebSocket('wss://192.168.1.35:8888');
+    this.socket = new WebSocket( CONFIG.socketServer );
     this.socket.binaryType = 'arraybuffer';
 
     _this = this;
@@ -60,7 +60,7 @@ var CLIENT = {
     this.socket.addEventListener('close', function ( event ) {
       _this.showStatus( 'Closed');
       console.log( 'closed' );
-      window.setTimeout( function() { _this.reconnect(); }, 3000 );
+      window.setTimeout( function() { _this.reconnect(); }, CONFIG.reconnectTimeout );
     });
   },
 

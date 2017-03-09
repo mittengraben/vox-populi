@@ -85,8 +85,8 @@ var INPUT = {
   },
 
   _clampZoom: function() {
-    if ( this.zoom < 0.6 ) this.zoom = 0.6;
-    if ( this.zoom > 1.1 ) this.zoom = 1.1;
+    if ( this.zoom < CONFIG.minZoom ) this.zoom = CONFIG.minZoom;
+    if ( this.zoom > CONFIG.maxZoom ) this.zoom = CONFIG.maxZoom;
   },
 
   _fromEvent: function( src, target ) {

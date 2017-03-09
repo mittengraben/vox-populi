@@ -7,7 +7,7 @@ var VIEWER = {
       axis: new THREE.Vector3(),
       angle: 0.0,
       damping: 0.95,
-      targetDistance: 1.8,
+      targetDistance: CONFIG.zoom1Distance,
       distanceAnimation: 0.0
     };
 
@@ -71,7 +71,7 @@ var VIEWER = {
   applyZoom: function( dt ) {
     var worldSphere = WORLD.boundingSphere;
     var eye = this.camera.position.clone().sub( worldSphere.center );
-    this.inertia.targetDistance = 1.8 * INPUT.zoom;
+    this.inertia.targetDistance = CONFIG.zoom1Distance * INPUT.zoom;
 
     var targetEye = eye.clone().normalize().multiplyScalar( this.inertia.targetDistance );
     this.camera.position.copy( worldSphere.center ).add( targetEye );

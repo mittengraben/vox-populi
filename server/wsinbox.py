@@ -11,17 +11,26 @@ log = logging.getLogger(__name__)
 
 
 class WSInbox(object):
-    def __init__(self, world):
+    def __init__(self, config, world):
         super(WSInbox, self).__init__()
         self.world = world
+        self.host, self.port = config.get(
+            'listen_address', 'localhost:8888'
+        ).split(':', maxsplit=1)
+        self.port = int(self.port)
+
         self.ssl_context = ssl.create_default_context(
             purpose=ssl.Purpose.CLIENT_AUTH
         )
         self.ssl_context.load_cert_chain(
-            certfile='cert/cert.pem',
-            keyfile='cert/key.pem'
+            certfile=config.get(
+                'cert_file', '/etc/ssl/cert/voxpopuli.cert.pem'
+            ),
+            keyfile=config.get(
+                'key_file', '/etc/ssl/private/voxpopuli.pkey.pem'
+            )
         )
-        self.ssl_context.verify_mode = ssl.CERT_OPTIONAL
+        self.ssl_context.verify_mode = ssl.CERT_NONE
         self.server = None
 
     async def handle_client(self, websocket, path):
@@ -37,7 +46,7 @@ class WSInbox(object):
     def run(self):
         self.server = asyncio.get_event_loop().run_until_complete(
             websockets.serve(
-                self.handle_client, '192.168.1.35', 8888, ssl=self.ssl_context
+                self.handle_client, self.host, self.port, ssl=self.ssl_context
             )
         )
 
