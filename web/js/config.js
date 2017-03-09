@@ -5,5 +5,5 @@ var CONFIG = {
   minZoom: 0.6,
   maxZoom: 1.1,
   zoom1Distance: 1.8,
-  version: [0, 1, 0]
+  version: [0, 2, 0]
 }
