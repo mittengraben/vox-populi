@@ -1,0 +1,5 @@
+- name: "Deploy vox-populi"
+  hosts: "imbibe.wtf"
+  roles:
+    - { role: voxpopuli, debug: "true" }
+    - { role: voxpopuli-server, debug: "true" }

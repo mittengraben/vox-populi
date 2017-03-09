@@ -1,0 +1,6 @@
+{
+  "world_subdiv": 4,
+  "listen_address": "0.0.0.0:{{ websock_port }}",
+  "cert_file": "{{ cert_file }}",
+  "key_file": "{{ key_file }}"
+}

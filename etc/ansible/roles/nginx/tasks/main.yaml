@@ -1,0 +1,23 @@
+---
+- name: Install nginx
+  apt:
+    name: nginx
+
+- name: Disable default site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Create config
+  template:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_group }}"
+    mode: 0644
+  notify: nginx reload
+
+- name: Start nginx
+  command: nginx
+  args:
+    creates: /run/nginx.pid

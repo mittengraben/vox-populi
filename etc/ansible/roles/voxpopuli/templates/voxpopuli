@@ -1,0 +1,28 @@
+server {
+	listen 80 default_server;
+	listen [::]:80 default_server;
+	server_name _;
+	return 301 https://$host$request_uri;
+}
+
+server {
+	listen 443 ssl;
+	listen [::]:443 ssl;
+
+	ssl_certificate {{ cert_file }};
+	ssl_certificate_key {{ key_file }};
+
+	gzip off;
+
+	root {{ webdir }};
+
+	index index.html;
+
+	server_name {{ target }} www.{{ target }};
+
+	location / {
+		# First attempt to serve request as file, then
+		# as directory, then fall back to displaying a 404.
+		try_files $uri $uri/ =404;
+	}
+}

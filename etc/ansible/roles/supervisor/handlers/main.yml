@@ -1,0 +1,2 @@
+- name: supervisor update
+  command: /usr/local/bin/supervisorctl -c /etc/supervisor/supervisord.conf update

@@ -1,0 +1,44 @@
+---
+- name: Install python3
+  apt:
+    name: '{{ python }}'
+    update_cache: yes
+
+- name: Install python-pip
+  apt:
+    name: python-pip
+
+- name: Install python3-pip
+  apt:
+    name: python3-pip
+
+- name: Install virtualenv
+  apt:
+    name: virtualenv
+
+- name: Create group
+  group:
+    name: '{{ nginx_group }}'
+    system: yes
+
+- name: Create user
+  user:
+    name: '{{ nginx_user }}'
+    comment: 'web user'
+    group: '{{ nginx_group }}'
+    system: yes
+    createhome: no
+
+- name: Create group
+  group:
+    name: '{{ server_group }}'
+    system: yes
+
+- name: Create user
+  user:
+    name: '{{ server_user }}'
+    comment: 'web user'
+    group: '{{ server_group }}'
+    groups: '{{ server_groups }}'
+    system: yes
+    createhome: no

@@ -1,0 +1,41 @@
+- name: Create web dir
+  file:
+    path: "{{ webdir }}"
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_group }}"
+    state: directory
+    mode: 0755
+
+- name: Copy www files
+  copy:
+    src: ../../web/
+    dest: "{{ webdir }}"
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_group }}"
+    mode: 0755
+
+- name: Make js config
+  template:
+    src: config.js
+    dest: "{{ webdir }}/js/config.js"
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_group }}"
+    mode: 0644
+
+- name: Make nginx config
+  template:
+    src: voxpopuli
+    dest: /etc/nginx/sites-available
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_group }}"
+    mode: 0644
+
+- name: Enable voxpopuli site
+  file:
+    src: /etc/nginx/sites-available/voxpopuli
+    dest: /etc/nginx/sites-enabled/voxpopuli
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_group }}"
+    mode: 0644
+    state: link
+  notify: nginx reload

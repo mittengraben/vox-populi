@@ -1,0 +1,63 @@
+- name: Create server dirs
+  file:
+    path: "{{ item }}"
+    owner: "{{ server_user }}"
+    group: "{{ server_group }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - "{{ serverdir }}"
+    - "{{ serverdir }}/src"
+    - "{{ serverdir }}/etc"
+
+- name: Copy server files
+  copy:
+    src: ../../server/
+    dest: "{{ serverdir }}/src"
+    owner: "{{ server_user }}"
+    group: "{{ server_group }}"
+    mode: 0755
+
+- name: Copy setup.py
+  copy:
+    src: ../../setup.py
+    dest: "{{ serverdir }}/src"
+    owner: "{{ server_user }}"
+    group: "{{ server_group }}"
+    mode: 0755
+
+- name: Install voxpopuli-server
+  pip:
+    virtualenv: "{{ serverdir }}"
+    virtualenv_python: "{{ python }}"
+    name: "file://{{ serverdir }}/src"
+    extra_args: "--upgrade"
+  notify: voxpopuli-server restart
+
+- name: Make supervisor config
+  template:
+    src: voxpopuli.conf
+    dest: "/etc/supervisor/conf.d/voxpopuli.conf"
+    owner: "{{ server_user }}"
+    group: "{{ server_group }}"
+    mode: 0644
+  notify: supervisor update
+
+- name: Flush handlers
+  meta: flush_handlers
+
+- name: Make server config
+  template:
+    src: config.json
+    dest: "{{ serverdir }}/etc/config.json"
+    owner: "{{ server_user }}"
+    group: "{{ server_group }}"
+    mode: 0644
+  notify: voxpopuli-server restart
+
+- name: Start voxpopuli server
+  supervisorctl:
+    supervisorctl_path: /usr/local/bin/supervisorctl
+    config: /etc/supervisor/supervisord.conf
+    name: voxpopuli-server
+    state: started

@@ -1,0 +1,17 @@
+nginx_user: www-data
+nginx_group: www-data
+
+server_user: voxpopuli
+server_group: voxpopuli
+server_groups: ssl-cert
+
+cert_file: /etc/ssl/certs/imbibe.wtf.cert.pem
+key_file: /etc/ssl/private/imbibe.wtf.key.pem
+
+target: voxpopuli.imbibe.wtf
+websock_port: 8888
+
+webdir: /var/www/voxpopuli
+serverdir: /opt/voxpopuli
+
+python: python3.5

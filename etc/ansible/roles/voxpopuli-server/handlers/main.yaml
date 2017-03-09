@@ -1,0 +1,6 @@
+- name: voxpopuli-server restart
+  supervisorctl:
+    supervisorctl_path: /usr/local/bin/supervisorctl
+    config: /etc/supervisor/supervisord.conf
+    name: voxpopuli-server
+    state: restarted

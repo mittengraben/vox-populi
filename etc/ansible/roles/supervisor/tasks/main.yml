@@ -1,0 +1,14 @@
+- name: Install supervisor
+  apt:
+    name: supervisor
+
+- name: Generate supervisor config
+  template:
+    src: supervisord.conf
+    dest: /etc/supervisor/supervisord.conf
+    mode: 0644
+
+- name: Start supervisor
+  command: supervisord -c /etc/supervisor/supervisord.conf
+  args:
+    creates: /run/supervisor.pid
