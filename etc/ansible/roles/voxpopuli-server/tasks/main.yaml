@@ -12,7 +12,7 @@
 
 - name: Copy server files
   copy:
-    src: ../../server/
+    src: ../../server
     dest: "{{ serverdir }}/src"
     owner: "{{ server_user }}"
     group: "{{ server_group }}"

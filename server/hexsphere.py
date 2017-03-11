@@ -120,7 +120,7 @@ class _Face(object):
 
 
 class Edge(object):
-    __slots__ = ['p1', 'p2', 'neighbour', 'tile']
+    __slots__ = ['p1', 'p2', 'neighbour', 'tile', '_hash']
     _container = {}
 
     def __init__(self, p1, p2):
@@ -131,37 +131,44 @@ class Edge(object):
         self.neighbour = None
 
         key = tuple(sorted([p1, p2]))
+        self._hash = hash(key)
+
         Edge._container.setdefault(key, self)
 
     @staticmethod
     def neighbours(e1, e2):
         e1.neighbour, e2.neighbour = e2, e1
 
+    @staticmethod
+    def chain_sort(edges):
+        p1_dict = {e.p1: e for e in edges}
+
+        start_point = edges[0].p1
+        next_point = edges[0].p2
+        sorted_edges = [edges[0]]
+
+        while next_point != start_point:
+            edge = p1_dict[next_point]
+            sorted_edges.append(edge)
+            next_point = edge.p2
+        return sorted_edges
+
 
 class Tile(object):
-    __slots__ = ['edges', 'center']
+    __slots__ = ['edges', 'center', 'world']
 
     def __init__(self):
         super(Tile, self).__init__()
         self.center = None
         self.edges = []
+        self.world = None
 
     def add_edge(self, edge):
         edge.tile = self
         self.edges.append(edge)
 
     def postprocess(self):
-        p1_dict = {e.p1: e for e in self.edges}
-
-        start_point = self.edges[0].p1
-        next_point = self.edges[0].p2
-        sorted_edges = [self.edges[0]]
-
-        while next_point != start_point:
-            edge = p1_dict[next_point]
-            sorted_edges.append(edge)
-            next_point = edge.p2
-        self.edges = sorted_edges
+        self.edges = Edge.chain_sort(self.edges)
 
         x, y, z = 0, 0, 0
         for e in self.edges:

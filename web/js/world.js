@@ -5,8 +5,9 @@ var WORLD = {
     this.pointBuffer = null;
     this.world = null;
     this.hexMesh = null;
+    this.borderMesh = null;
 
-    this.directionalLight = new THREE.DirectionalLight( 0xffffff );
+    this.directionalLight = new THREE.DirectionalLight( 0xdddddd );
     this.directionalLight.position.set( 0, 0, 1 );
 
     scene.add( this.directionalLight );
@@ -19,6 +20,7 @@ var WORLD = {
       if ( this.world !== null ) {
         this.scene.remove( this.world );
         this.scene.remove( this.hexMesh );
+        this.scene.remove( this.borderMesh );
       }
 
       var geometry = new THREE.BufferGeometry();
@@ -30,7 +32,7 @@ var WORLD = {
       this.world = new THREE.Mesh(
         geometry,
         new THREE.MeshPhongMaterial( {
-          color: 0x00ff00,
+          color: 0xa0c409,
           polygonOffset: true,
           polygonOffsetFactor: 1.0,
           polygonOffsetUnits: 1.0,
@@ -41,10 +43,16 @@ var WORLD = {
       geometry = new THREE.BufferGeometry();
       geometry.setIndex( new THREE.BufferAttribute( new Uint32Array( data.mesh ), 1 ) );
       geometry.addAttribute( 'position', this.pointBuffer );
-      this.hexMesh = new THREE.LineSegments( geometry, new THREE.LineBasicMaterial( { color: 0x555555 } ) );
+      this.hexMesh = new THREE.LineSegments( geometry, new THREE.LineBasicMaterial( { color: 0x365023 } ) );
+
+      geometry = new THREE.BufferGeometry();
+      geometry.setIndex( new THREE.BufferAttribute( new Uint32Array( data.bordermesh ), 1 ) );
+      geometry.addAttribute( 'position', this.pointBuffer );
+      this.borderMesh = new THREE.LineSegments( geometry, new THREE.LineBasicMaterial( { color: 0xffffff } ) );
 
       scene.add( this.world );
       scene.add( this.hexMesh );
+      scene.add( this.borderMesh );
 
       this.directionalLight.target = this.world;
   },

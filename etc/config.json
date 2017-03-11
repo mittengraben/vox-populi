@@ -1,5 +1,6 @@
 {
   "world_subdiv": 4,
+  "world_regions": 85,
   "listen_address": "192.168.1.35:8888",
   "cert_file": "cert/cert.pem",
   "key_file": "cert/key.pem"
