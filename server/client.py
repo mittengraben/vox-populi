@@ -38,5 +38,12 @@ class Client(object):
         data.update(self.world.get_geometry())
         await self.send(data)
 
+    async def do_tilemap(self, _):
+        data = {
+            'name': 'tilemap',
+            'tilemap': self.world.get_tiles()
+        }
+        await self.send(data)
+
     def close(self):
         self.ws.close()

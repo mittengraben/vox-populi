@@ -184,7 +184,7 @@ class Tile(object):
         center.z = z / count
 
     def emit_faces(self):
-        vertices = [e.p1 for e in self.edges]
+        vertices = self.emit_vertices()
         vertices.append(vertices[0])
         faces = []
         for index in range(len(self.edges)):
@@ -192,6 +192,9 @@ class Tile(object):
             faces.append(vertices[index + 1])
             faces.append(vertices[index])
         return faces
+
+    def emit_vertices(self):
+        return [e.p1 for e in self.edges]
 
 
 def icosahedron():
@@ -296,6 +299,7 @@ class HexSphere(object):
         for t in self.tiles.values():
             t.postprocess()
 
+        self.tiles = sorted(self.tiles.values(), key=lambda t: len(t.edges))
         self.faces = []
 
     def _emit_vertices(self):
@@ -306,7 +310,7 @@ class HexSphere(object):
 
     def _emit_faces(self):
         indicies = []
-        for tile in self.tiles.values():
+        for tile in self.tiles:
             indicies.extend(tile.emit_faces())
         return indicies
 

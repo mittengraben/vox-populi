@@ -40,15 +40,21 @@
       var stats = new Stats();
       document.body.appendChild( stats.dom );
 
-      VIEWER.init( camera, renderer, WORLD.boundingSphere.center, scene );
+      VIEWER.init( camera, renderer );
 
+      var nextFrame = clock.getElapsedTime() + CONFIG.frameTime;
       function render() {
-        dt = clock.getDelta();
+        ctime = clock.getElapsedTime();
+        while( ctime > nextFrame ) {
+          INPUT.update();
+          VIEWER.update();
+          WORLD.update();
+          nextFrame = nextFrame + CONFIG.frameTime;
+        };
+
         requestAnimationFrame( render );
-        VIEWER.update( dt );
-        WORLD.update( dt );
-        stats.update();
         renderer.render( scene, camera );
+        stats.update();
       }
       render();
 

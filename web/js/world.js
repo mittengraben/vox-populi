@@ -7,6 +7,10 @@ var WORLD = {
     this.hexMesh = null;
     this.borderMesh = null;
 
+    this.selectionMesh = null;
+
+    this.tileMap = null;
+
     this.directionalLight = new THREE.DirectionalLight( 0xdddddd );
     this.directionalLight.position.set( 0, 0, 1 );
 
@@ -50,17 +54,51 @@ var WORLD = {
       geometry.addAttribute( 'position', this.pointBuffer );
       this.borderMesh = new THREE.LineSegments( geometry, new THREE.LineBasicMaterial( { color: 0xffffff } ) );
 
-      scene.add( this.world );
-      scene.add( this.hexMesh );
-      scene.add( this.borderMesh );
+      this.scene.add( this.world );
+      this.scene.add( this.hexMesh );
+      this.scene.add( this.borderMesh );
 
       this.directionalLight.target = this.world;
   },
 
-  update: function( dt ) {
+  setTilemap: function( data ) {
+    this.tileMap = data.tilemap;
+  },
+
+  pickTile: function( raycaster ) {
+    if ( this.world === null ) return;
+    if ( this.tileMap === null ) return;
+
+    intersections = raycaster.intersectObject( this.world );
+    if ( intersections.length < 1 ) return;
+
+    faceIndex = intersections[0].faceIndex;
+    var tileIndex = 0;
+    if ( faceIndex < 5 * 12 ) {
+      tileIndex = faceIndex / 5 | 0;
+    } else {
+      tileIndex = ((faceIndex - 5 * 12) / 6 | 0) + 12;
+    };
+
+    tile = this.tileMap[tileIndex];
+
+    if ( this.selectionMesh !== null ) {
+      this.scene.remove( this.selectionMesh );
+    }
+
+    var geometry = new THREE.BufferGeometry();
+    var loop = tile.vertices.slice();
+    loop.push( tile.vertices[0] );
+    geometry.setIndex( new THREE.BufferAttribute( new Uint32Array( loop ), 1 ) );
+    geometry.addAttribute( 'position', this.pointBuffer );
+    this.selectionMesh = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0xff0000 } ) );
+    this.scene.add( this.selectionMesh );
+  },
+
+  update: function() {
     var targetVec = new THREE.Vector3();
     targetVec.subVectors( this.directionalLight.position, this.boundingSphere.center );
-    targetVec.applyAxisAngle( new THREE.Vector3( 1, 0, 0 ), 0.1 * dt );
+    targetVec.applyAxisAngle( new THREE.Vector3( 1, 0, 0 ), 0.1 * CONFIG.frameTime );
     this.directionalLight.position.copy( this.boundingSphere.center ).add( targetVec );
   }
 }

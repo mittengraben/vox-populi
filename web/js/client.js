@@ -11,6 +11,11 @@ var CLIENT = {
 
       worldgeometry: function( data ) {
         WORLD.setGeometry( data );
+        _this.send( { name: 'tilemap' } );
+      },
+
+      tilemap: function( data ) {
+        WORLD.setTilemap( data );
       }
     }
 

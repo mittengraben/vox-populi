@@ -7,15 +7,25 @@ var INPUT = {
     this.touchDist = 0.0;
     this.zoom = 1.0;
 
+    this.clickLag = -1;
+    this.click = false;
+    this.clickPos = new THREE.Vector2();
+
     document.addEventListener( 'mousedown', function( evt ) {
       evt.preventDefault();
+      inpObj.clickLag = CONFIG.clickLag;
       inpObj.drag = true;
       inpObj.oldPos.copy( inpObj.currentPos );
     } );
 
     document.addEventListener( 'mouseup', function( evt ) {
       evt.preventDefault();
+      if ( inpObj.clickLag > 0 ) {
+        inpObj.click = true;
+        inpObj._fromEvent( evt, inpObj.clickPos );
+      }
       inpObj.drag = false;
+      inpObj.clickLag = -1;
     } );
 
     document.addEventListener( 'mousemove', function( evt ) {
@@ -32,6 +42,7 @@ var INPUT = {
     document.addEventListener( 'touchstart', function( evt ) {
       evt.preventDefault();
       if ( evt.touches.length == 1 ) {
+          inpObj.clickLag = CONFIG.clickLag;
           inpObj._fromEvent( evt.touches[0], inpObj.currentPos );
           inpObj.drag = true;
           inpObj.oldPos.copy( inpObj.currentPos );
@@ -48,12 +59,18 @@ var INPUT = {
 
     document.addEventListener( 'touchend', function( evt ) {
       evt.preventDefault();
+      if ( inpObj.clickLag > 0 ) {
+        inpObj.click = true;
+        inpObj._fromEvent( evt, inpObj.clickPos );
+      }
       inpObj.drag = false;
+      inpObj.clickLag = -1;
     } );
 
     document.addEventListener( 'touchcancel', function( evt ) {
       evt.preventDefault();
       inpObj.drag = false;
+      inpObj.clickLag = -1;
     } );
 
     document.addEventListener( 'touchmove', function( evt ) {
@@ -84,6 +101,15 @@ var INPUT = {
     return delta;
   },
 
+  getClick: function() {
+    if ( ! this.click ) {
+      return null;
+    };
+
+    this.click = false;
+    return this.clickPos.clone();
+  },
+
   _clampZoom: function() {
     if ( this.zoom < CONFIG.minZoom ) this.zoom = CONFIG.minZoom;
     if ( this.zoom > CONFIG.maxZoom ) this.zoom = CONFIG.maxZoom;
@@ -92,6 +118,12 @@ var INPUT = {
   _fromEvent: function( src, target ) {
     target.x = ( src.clientX / window.innerWidth ) * 2 - 1;
     target.y = - ( src.clientY / window.innerHeight ) * 2 + 1;
+  },
+
+  update: function() {
+    if ( this.clickLag >= 0 ) {
+      this.clickLag--;
+    };
   }
 }
 

@@ -2,6 +2,8 @@ var VIEWER = {
   init: function( camera, renderer ) {
     this.camera = camera;
     this.renderer = renderer;
+    this.raycaster = new THREE.Raycaster();
+    this.tileSelection = null;
 
     this.inertia = {
       axis: new THREE.Vector3(),
@@ -19,7 +21,7 @@ var VIEWER = {
 
   },
 
-  applyRotation: function( dt ) {
+  applyRotation: function() {
     var delta = INPUT.dragDelta();
     var axis = this.inertia.axis;
     var angle = this.inertia.angle;
@@ -68,7 +70,7 @@ var VIEWER = {
     this.camera.lookAt( worldSphere.center );
   },
 
-  applyZoom: function( dt ) {
+  applyZoom: function() {
     var worldSphere = WORLD.boundingSphere;
     var eye = this.camera.position.clone().sub( worldSphere.center );
     this.inertia.targetDistance = CONFIG.zoom1Distance * INPUT.zoom;
@@ -77,9 +79,15 @@ var VIEWER = {
     this.camera.position.copy( worldSphere.center ).add( targetEye );
   },
 
-  update: function( dt ) {
-    this.applyRotation( dt );
-    this.applyZoom( dt );
+  update: function() {
+    clickPos = INPUT.getClick();
+    if ( clickPos !== null ) {
+      this.raycaster.setFromCamera( clickPos, this.camera );
+      WORLD.pickTile( this.raycaster );
+    };
+
+    this.applyRotation();
+    this.applyZoom();
     this.camera.updateProjectionMatrix();
   }
 }

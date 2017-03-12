@@ -74,7 +74,11 @@ class World(object):
         self.geometry = self.sphere.emit()
         log.info('Generating world...')
 
-        self.tiles = [WorldTile(i, x) for i, x in self.sphere.tiles.items()]
+        self.tile_map = [
+            WorldTile(i, x) for i, x in enumerate(self.sphere.tiles)
+        ]
+
+        self._tile_cache = None
 
         self.regions = []
         self._generate_regions(count=config.get('world_regions', 85))
@@ -82,12 +86,12 @@ class World(object):
         log.info('World generated')
         log.info('Subdivisions {}'.format(subdivisions))
         log.info('Vertices {}'.format(len(self.geometry['position']) // 3))
-        log.info('Tiles {}'.format(len(self.tiles)))
+        log.info('Tiles {}'.format(len(self.tile_map)))
         log.info('Regions {}'.format(len(self.regions)))
 
     def _generate_regions(self, count):
         self.regions = [WorldRegion(i) for i in range(count)]
-        seeds = random.sample(self.tiles, count)
+        seeds = random.sample(self.tile_map, count)
 
         fronts = []
         for region, seed in zip(self.regions, seeds):
@@ -110,3 +114,14 @@ class World(object):
 
     def get_geometry(self):
         return self.geometry
+
+    def get_tiles(self):
+        if self._tile_cache is None:
+            self._tile_cache = [
+                {
+                    'vertices': t.geometry.emit_vertices(),
+                    'center': t.geometry.center
+                }
+                for t in self.tile_map
+            ]
+        return self._tile_cache
