@@ -16,6 +16,11 @@ var CLIENT = {
 
       tilemap: function( data ) {
         WORLD.setTilemap( data );
+        _this.send( { name: 'regionmap' } );
+      },
+
+      regionmap: function( data ) {
+        WORLD.setRegionmap( data );
       }
     }
 

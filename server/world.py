@@ -65,6 +65,9 @@ class WorldRegion(object):
 
         return self._border_cache
 
+    def emit_border(self):
+        return (e.p1 for e in self.border())
+
 
 class World(object):
     def __init__(self, config):
@@ -81,6 +84,7 @@ class World(object):
         self._tile_cache = None
 
         self.regions = []
+        self._region_cache = None
         self._generate_regions(count=config.get('world_regions', 85))
 
         log.info('World generated')
@@ -120,8 +124,19 @@ class World(object):
             self._tile_cache = [
                 {
                     'vertices': t.geometry.emit_vertices(),
-                    'center': t.geometry.center
+                    'center': t.geometry.center,
+                    'region': t.region.index
                 }
                 for t in self.tile_map
             ]
         return self._tile_cache
+
+    def get_regions(self):
+        if self._region_cache is None:
+            self._region_cache = [
+                {
+                    'border': list(r.emit_border())
+                }
+                for r in self.regions
+            ]
+        return self._region_cache

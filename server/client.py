@@ -45,5 +45,12 @@ class Client(object):
         }
         await self.send(data)
 
+    async def do_regionmap(self, _):
+        data = {
+            'name': 'regionmap',
+            'regionmap': self.world.get_regions()
+        }
+        await self.send(data)
+
     def close(self):
         self.ws.close()

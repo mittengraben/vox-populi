@@ -8,8 +8,10 @@ var WORLD = {
     this.borderMesh = null;
 
     this.selectionMesh = null;
+    this.regionSelectionMesh = null;
 
     this.tileMap = null;
+    this.regionMap = null;
 
     this.directionalLight = new THREE.DirectionalLight( 0xdddddd );
     this.directionalLight.position.set( 0, 0, 1 );
@@ -65,9 +67,14 @@ var WORLD = {
     this.tileMap = data.tilemap;
   },
 
+  setRegionmap: function( data ) {
+    this.regionMap = data.regionmap;
+  },
+
   pickTile: function( raycaster ) {
     if ( this.world === null ) return;
     if ( this.tileMap === null ) return;
+    if ( this.regionMap === null ) return;
 
     intersections = raycaster.intersectObject( this.world );
     if ( intersections.length < 1 ) return;
@@ -93,6 +100,24 @@ var WORLD = {
     geometry.addAttribute( 'position', this.pointBuffer );
     this.selectionMesh = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0xff0000 } ) );
     this.scene.add( this.selectionMesh );
+
+    this.pickRegion( tile.region );
+  },
+
+  pickRegion: function( index ) {
+    if ( this.regionSelectionMesh !== null ) {
+      this.scene.remove( this.regionSelectionMesh );
+    }
+
+    var region = this.regionMap[ index ];
+
+    var geometry = new THREE.BufferGeometry();
+    var loop = region.border.slice();
+    loop.push( region.border[0] );
+    geometry.setIndex( new THREE.BufferAttribute( new Uint32Array( loop ), 1 ) );
+    geometry.addAttribute( 'position', this.pointBuffer );
+    this.regionSelectionMesh = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0xff0000 } ) );
+    this.scene.add( this.regionSelectionMesh );
   },
 
   update: function() {
