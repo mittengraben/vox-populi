@@ -7,5 +7,5 @@ var CONFIG = {
   zoom1Distance: 1.8,
   frameTime: 1 / 30.0,
   clickLag: 10,
-  version: [0, 3, 0]
+  version: [0, 4, 0]
 }
