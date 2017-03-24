@@ -54,14 +54,14 @@ var INPUT = {
             inpObj._fromEvent( evt.touches[i], tp[i] );
           };
           inpObj.touchDist = tp[0].distanceTo( tp[1] );
-      }
+      };
     } );
 
     document.addEventListener( 'touchend', function( evt ) {
       evt.preventDefault();
       if ( inpObj.clickLag > 0 ) {
         inpObj.click = true;
-        inpObj._fromEvent( evt, inpObj.clickPos );
+        inpObj._fromEvent( evt.touches[0], inpObj.clickPos );
       }
       inpObj.drag = false;
       inpObj.clickLag = -1;

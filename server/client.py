@@ -52,5 +52,12 @@ class Client(object):
         }
         await self.send(data)
 
+    async def do_territoryborder(self, _):
+        data = {
+            'name': 'territoryborder',
+            'bordermesh': self.world.get_territory_border_mesh(0)
+        }
+        await self.send(data)
+
     def close(self):
         self.ws.close()

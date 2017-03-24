@@ -79,6 +79,25 @@ var VIEWER = {
     this.camera.position.copy( worldSphere.center ).add( targetEye );
   },
 
+  centerOn: function( point ) {
+    var worldSphere = WORLD.boundingSphere;
+    var oldEye = this.camera.position.clone().sub( worldSphere.center );
+    var eye = point.clone().sub( worldSphere.center );
+
+    var axis = new THREE.Vector3();
+    axis.crossVectors( eye, oldEye ).normalize();
+
+    var angle = eye.angleTo( oldEye );
+    oldEye.applyAxisAngle( axis, -angle ).normalize();
+    var distance = oldEye.length();
+    this.camera.position.copy( worldSphere.center ).add( oldEye.multiplyScalar( distance ) );
+    this.camera.up.applyAxisAngle( axis, -angle ).normalize();
+
+    this.camera.lookAt( worldSphere.center );
+
+    this.camera.updateProjectionMatrix();
+  },
+
   update: function() {
     clickPos = INPUT.getClick();
     if ( clickPos !== null ) {

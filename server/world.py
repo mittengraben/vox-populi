@@ -5,6 +5,8 @@ import random
 from .hexsphere import Edge
 from .hexsphere import HexSphere
 
+from .territory import Territory
+
 
 log = logging.getLogger(__name__)
 
@@ -87,6 +89,8 @@ class World(object):
         self._region_cache = None
         self._generate_regions(count=config.get('world_regions', 85))
 
+        self.territories = [Territory(self.regions[13])]
+
         log.info('World generated')
         log.info('Subdivisions {}'.format(subdivisions))
         log.info('Vertices {}'.format(len(self.geometry['position']) // 3))
@@ -140,3 +144,6 @@ class World(object):
                 for r in self.regions
             ]
         return self._region_cache
+
+    def get_territory_border_mesh(self, territory_id):
+        return self.territories[territory_id].border_mesh()

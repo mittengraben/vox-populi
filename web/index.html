@@ -27,7 +27,7 @@
       WORLD.init( scene );
       DEBUG.init( scene );
 
-      var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.01, 10 );
+      var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1.0e-6, 10 );
       camera.position.z = 1.1;
 
       var clock = new THREE.Clock()

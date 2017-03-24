@@ -8,7 +8,7 @@ var WORLD = {
     this.borderMesh = null;
 
     this.selectionMesh = null;
-    this.regionSelectionMesh = null;
+    this.territoryBorderMesh = null;
 
     this.tileMap = null;
     this.regionMap = null;
@@ -29,21 +29,34 @@ var WORLD = {
         this.scene.remove( this.borderMesh );
       }
 
+      var materials = [
+        new THREE.MeshBasicMaterial( {
+          color: 0x333333, transparent: true, opacity: 0.8,
+          polygonOffset: true,
+          polygonOffsetFactor: 1.0,
+          polygonOffsetUnits: 1.0,
+        } ),
+        new THREE.MeshPhongMaterial( {
+          color: 0xa0c409,
+          polygonOffset: true,
+          polygonOffsetFactor: 1.0,
+          polygonOffsetUnits: 1.0,
+          shading: THREE.FlatShading,
+          side: THREE.DoubleSide
+        } )
+      ]
+
       var geometry = new THREE.BufferGeometry();
 
       this.pointBuffer = new THREE.BufferAttribute( new Float32Array( data.position ), 3 );
       geometry.setIndex( new THREE.BufferAttribute( new Uint32Array( data.indicies ), 1 ) );
       geometry.addAttribute( 'position', this.pointBuffer );
       geometry.addAttribute( 'normal', this.pointBuffer );
+      geometry.addGroup( 0, 6600, 0 );
+      geometry.addGroup( 6600, data.indicies.length - 6600, 1 );
       this.world = new THREE.Mesh(
         geometry,
-        new THREE.MeshPhongMaterial( {
-          color: 0xa0c409,
-          polygonOffset: true,
-          polygonOffsetFactor: 1.0,
-          polygonOffsetUnits: 1.0,
-          shading: THREE.FlatShading
-        } )
+        new THREE.MultiMaterial( materials )
       );
 
       geometry = new THREE.BufferGeometry();
@@ -69,6 +82,29 @@ var WORLD = {
 
   setRegionmap: function( data ) {
     this.regionMap = data.regionmap;
+  },
+
+  setTerritoryBorder: function( data ) {
+    if ( this.territoryBorderMesh !== null ) {
+      this.scene.remove( this.territoryBorderMesh );
+    }
+
+    var geometry = new THREE.BufferGeometry();
+
+    position = new THREE.BufferAttribute( new Float32Array( data.position ), 3 );
+    geometry.setIndex( new THREE.BufferAttribute( new Uint32Array( data.indicies ), 1 ) );
+    geometry.addAttribute( 'position', position );
+    geometry.computeBoundingSphere();
+    this.territoryBorderMesh = new THREE.Mesh(
+      geometry,
+      new THREE.MeshBasicMaterial( {
+        color: 0xff0000, transparent: true, opacity: 0.3
+      } )
+    );
+    this.territoryBorderMesh.drawMode = THREE.TriangleStripDrawMode;
+
+    this.scene.add( this.territoryBorderMesh );
+    VIEWER.centerOn( geometry.boundingSphere.center );
   },
 
   pickTile: function( raycaster ) {
@@ -100,24 +136,6 @@ var WORLD = {
     geometry.addAttribute( 'position', this.pointBuffer );
     this.selectionMesh = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0xff0000 } ) );
     this.scene.add( this.selectionMesh );
-
-    this.pickRegion( tile.region );
-  },
-
-  pickRegion: function( index ) {
-    if ( this.regionSelectionMesh !== null ) {
-      this.scene.remove( this.regionSelectionMesh );
-    }
-
-    var region = this.regionMap[ index ];
-
-    var geometry = new THREE.BufferGeometry();
-    var loop = region.border.slice();
-    loop.push( region.border[0] );
-    geometry.setIndex( new THREE.BufferAttribute( new Uint32Array( loop ), 1 ) );
-    geometry.addAttribute( 'position', this.pointBuffer );
-    this.regionSelectionMesh = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0xff0000 } ) );
-    this.scene.add( this.regionSelectionMesh );
   },
 
   update: function() {

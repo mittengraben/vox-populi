@@ -15,6 +15,49 @@ def _normalize(x, y, z):
     )
 
 
+class Vector3(object):
+    __slots__ = ['x', 'y', 'z']
+
+    def __init__(self, x, y, z):
+        super(Vector3, self).__init__()
+        self.x, self.y, self.z = x, y, z
+
+    def magnitude(self):
+        return math.sqrt(
+            self.x * self.x +
+            self.y * self.y +
+            self.z * self.z
+        )
+
+    def normalize(self):
+        mag = self.magnitude()
+        self.x /= mag
+        self.y /= mag
+        self.z /= mag
+
+    def mul(self, scalar):
+        return Vector3(
+            self.x * scalar,
+            self.y * scalar,
+            self.z * scalar
+        )
+
+    @classmethod
+    def from_ab(cls, a, b):
+        return cls(
+            b.x - a.x,
+            b.y - a.y,
+            b.z - a.z
+        )
+
+    def add_to(self, p):
+        return Vector3(
+            p.x + self.x,
+            p.y + self.y,
+            p.z + self.z
+        )
+
+
 class _Point(object):
     __slots__ = ['x', 'y', 'z', 'index']
 
@@ -30,6 +73,13 @@ class _Point(object):
     @classmethod
     def from_index(cls, index):
         return cls._container[index]
+
+    @classmethod
+    def move(cls, point, towards, delta):
+        vec = Vector3.from_ab(point, towards)
+        vec = vec.mul(delta).add_to(point)
+
+        return vec
 
     def __repr__(self):
         return '<Point {}>'.format(
@@ -135,6 +185,12 @@ class Edge(object):
 
         Edge._container.setdefault(key, self)
 
+    def other_point(self, p):
+        if self.p1 == p:
+            return self.p2
+        else:
+            return self.p1
+
     @staticmethod
     def neighbours(e1, e2):
         e1.neighbour, e2.neighbour = e2, e1
@@ -195,6 +251,13 @@ class Tile(object):
 
     def emit_vertices(self):
         return [e.p1 for e in self.edges]
+
+    @staticmethod
+    def shared_edge(t1, t2):
+        for e in t1.edges:
+            if e.neighbour.tile == t2:
+                return e
+        return None
 
 
 def icosahedron():

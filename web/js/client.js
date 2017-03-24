@@ -21,6 +21,11 @@ var CLIENT = {
 
       regionmap: function( data ) {
         WORLD.setRegionmap( data );
+        _this.send( { name: 'territoryborder' } );
+      },
+
+      territoryborder: function( data ) {
+        WORLD.setTerritoryBorder( data.bordermesh );
       }
     }
 
