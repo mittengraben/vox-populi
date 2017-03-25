@@ -25,8 +25,8 @@ class Client(object):
                 command = await self.recv()
                 if hasattr(self, 'do_' + command['name']):
                     await getattr(self, 'do_' + command['name'])(command)
-        except Exception as exc:
-            log.error('{}: {}'.format(type(exc), exc))
+        except Exception:
+            log.exception('during command execution')
 
     async def do_hello(self, _):
         await self.send({'name': 'hello', 'response': 'hi'})
@@ -56,6 +56,13 @@ class Client(object):
         data = {
             'name': 'territoryborder',
             'bordermesh': self.world.get_territory_border_mesh(0)
+        }
+        await self.send(data)
+
+    async def do_revealedtiles(self, _):
+        data = {
+            'name': 'revealedtiles',
+            'tileids': self.world.get_revealed_tiles_for_territory(0)
         }
         await self.send(data)
 

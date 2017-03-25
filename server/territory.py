@@ -12,6 +12,15 @@ class Territory(object):
         self._region_set = {x.index for x in self.regions}
         self._border_mesh_cache = None
 
+        for tile in region.tiles:
+            tile.revealed = True
+
+    def revealed_tiles(self):
+        return [
+            tile.index for region in self.regions for tile in region.tiles
+            if tile.revealed
+        ]
+
     def border_mesh(self):
         if self._border_mesh_cache is None:
             border_loop = Edge.chain_sort(

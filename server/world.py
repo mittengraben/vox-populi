@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class WorldTile(object):
-    __slots__ = ['index', 'geometry', 'region', '_neighbours']
+    __slots__ = ['index', 'geometry', 'region', '_neighbours', 'revealed']
 
     def __init__(self, index, geometry):
         super(WorldTile, self).__init__()
@@ -20,6 +20,7 @@ class WorldTile(object):
         self.geometry = geometry
         geometry.world = self
         self.region = None
+        self.revealed = False
 
         self._neighbours = None
 
@@ -147,3 +148,6 @@ class World(object):
 
     def get_territory_border_mesh(self, territory_id):
         return self.territories[territory_id].border_mesh()
+
+    def get_revealed_tiles_for_territory(self, territory_id):
+        return self.territories[territory_id].revealed_tiles()

@@ -1,3 +1,11 @@
+function tileIndexFromFace( faceIndex ) {
+  if ( faceIndex < 5 * 12 ) {
+    return faceIndex / 5 | 0;
+  } else {
+    return ((faceIndex - 5 * 12) / 6 | 0) + 12;
+  };
+};
+
 var WORLD = {
   init: function( scene ) {
     this.boundingSphere = new THREE.Sphere( new THREE.Vector3(0, 0, 0), 1 );
@@ -52,8 +60,7 @@ var WORLD = {
       geometry.setIndex( new THREE.BufferAttribute( new Uint32Array( data.indicies ), 1 ) );
       geometry.addAttribute( 'position', this.pointBuffer );
       geometry.addAttribute( 'normal', this.pointBuffer );
-      geometry.addGroup( 0, 6600, 0 );
-      geometry.addGroup( 6600, data.indicies.length - 6600, 1 );
+      geometry.addGroup( 0, data.indicies.length, 0 );
       this.world = new THREE.Mesh(
         geometry,
         new THREE.MultiMaterial( materials )
@@ -78,6 +85,9 @@ var WORLD = {
 
   setTilemap: function( data ) {
     this.tileMap = data.tilemap;
+    for ( var i = 0; i < this.tileMap.length; ++i ) {
+      this.tileMap[ i ].mat = 0;
+    };
   },
 
   setRegionmap: function( data ) {
@@ -107,6 +117,41 @@ var WORLD = {
     VIEWER.centerOn( geometry.boundingSphere.center );
   },
 
+  redrawTiles: function() {
+    if ( this.world === null ) return;
+    if ( this.tileMap === null ) return;
+
+    var geometry = this.world.geometry;
+    geometry.clearGroups();
+    var start = 0;
+    var index = 0;
+    var count = 0;
+    var state = this.tileMap[0].mat;
+    for ( var i = 1; i < geometry.index.count; i++ ) {
+      count++;
+      var tileIndex = tileIndexFromFace( i / 3 | 0 );
+      if ( tileIndex !== index ) {
+        index = tileIndex;
+        if ( state !== this.tileMap[index].mat ) {
+          geometry.addGroup( start, count, state );
+          state = this.tileMap[index].mat;
+          start = i;
+          count = 0;
+        }
+      }
+    };
+    geometry.addGroup( start, count, state );
+  },
+
+  setRevealedTiles: function( tileIds ) {
+    if ( this.tileMap === null ) return;
+
+    for ( var i = 0; i < tileIds.length; ++i ) {
+      this.tileMap[ tileIds[ i ] ].mat = 1;
+    }
+    this.redrawTiles();
+  },
+
   pickTile: function( raycaster ) {
     if ( this.world === null ) return;
     if ( this.tileMap === null ) return;
@@ -116,12 +161,7 @@ var WORLD = {
     if ( intersections.length < 1 ) return;
 
     faceIndex = intersections[0].faceIndex;
-    var tileIndex = 0;
-    if ( faceIndex < 5 * 12 ) {
-      tileIndex = faceIndex / 5 | 0;
-    } else {
-      tileIndex = ((faceIndex - 5 * 12) / 6 | 0) + 12;
-    };
+    var tileIndex = tileIndexFromFace( faceIndex );
 
     tile = this.tileMap[tileIndex];
 

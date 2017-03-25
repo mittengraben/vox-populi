@@ -26,6 +26,11 @@ var CLIENT = {
 
       territoryborder: function( data ) {
         WORLD.setTerritoryBorder( data.bordermesh );
+        _this.send( { name: 'revealedtiles' } );
+      },
+
+      revealedtiles: function( data ) {
+        WORLD.setRevealedTiles( data.tileids );
       }
     }
 
