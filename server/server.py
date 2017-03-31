@@ -57,6 +57,7 @@ class Server(object):
         except KeyboardInterrupt:
             pass
         finally:
+            self.world.dispose()
             self.inbox.close()
             asyncio.get_event_loop().close()
             log.info('Done')

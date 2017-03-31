@@ -2,6 +2,9 @@
 import logging
 import msgpack
 
+from . import tasks
+
+
 log = logging.getLogger(__name__)
 
 
@@ -65,6 +68,22 @@ class Client(object):
             'tileids': self.world.get_revealed_tiles_for_territory(0)
         }
         await self.send(data)
+
+    async def do_revealtile(self, cmd):
+        if self.world.reveal_tile(cmd['index'], territory_id=0):
+            self.world.timers.schedule(
+                tasks.HideTileTask(
+                    world=self.world,
+                    player_id=0,
+                    tile_index=cmd['index'],
+                    after=5.0
+                )
+            )
+            await self.send({
+                'name': 'revealtile',
+                'index': cmd['index'],
+                'revealed': True
+            })
 
     def close(self):
         self.ws.close()

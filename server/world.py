@@ -6,6 +6,7 @@ from .hexsphere import Edge
 from .hexsphere import HexSphere
 
 from .territory import Territory
+from .timers import Timers
 
 
 log = logging.getLogger(__name__)
@@ -98,6 +99,8 @@ class World(object):
         log.info('Tiles {}'.format(len(self.tile_map)))
         log.info('Regions {}'.format(len(self.regions)))
 
+        self.timers = Timers()
+
     def _generate_regions(self, count):
         self.regions = [WorldRegion(i) for i in range(count)]
         seeds = random.sample(self.tile_map, count)
@@ -151,3 +154,14 @@ class World(object):
 
     def get_revealed_tiles_for_territory(self, territory_id):
         return self.territories[territory_id].revealed_tiles()
+
+    def reveal_tile(self, tile_index, territory_id):
+        return self.territories[territory_id].reveal_tile(
+            self.tile_map[tile_index]
+        )
+
+    def hide_tile(self, tile_index):
+        self.tile_map[tile_index].revealed = False
+
+    def dispose(self):
+        self.timers.stop()

@@ -12,14 +12,21 @@ class Territory(object):
         self._region_set = {x.index for x in self.regions}
         self._border_mesh_cache = None
 
-        for tile in region.tiles:
-            tile.revealed = True
-
     def revealed_tiles(self):
         return [
             tile.index for region in self.regions for tile in region.tiles
             if tile.revealed
         ]
+
+    def reveal_tile(self, tile):
+        if tile.region.index not in self._region_set:
+            return False
+
+        if tile.revealed:
+            return False
+
+        tile.revealed = True
+        return True
 
     def border_mesh(self):
         if self._border_mesh_cache is None:

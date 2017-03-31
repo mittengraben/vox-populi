@@ -152,6 +152,16 @@ var WORLD = {
     this.redrawTiles();
   },
 
+  revealTile: function( tileId, reveal ) {
+    if ( this.tileMap === null ) return;
+    if ( reveal ) {
+      this.tileMap[ tileId ].mat = 1
+    } else {
+      this.tileMap[ tileId ].mat = 0
+    };
+    this.redrawTiles();
+  },
+
   pickTile: function( raycaster ) {
     if ( this.world === null ) return;
     if ( this.tileMap === null ) return;
@@ -176,6 +186,8 @@ var WORLD = {
     geometry.addAttribute( 'position', this.pointBuffer );
     this.selectionMesh = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0xff0000 } ) );
     this.scene.add( this.selectionMesh );
+
+    CLIENT.revealTile( tileIndex );
   },
 
   update: function() {

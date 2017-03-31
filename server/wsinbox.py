@@ -6,6 +6,7 @@ import ssl
 import websockets
 
 from .client import Client
+from .dispatcher import Dispatcher
 
 log = logging.getLogger(__name__)
 
@@ -38,7 +39,10 @@ class WSInbox(object):
         log.info(
             'Connected client from {}:{}'.format(host, port)
         )
-        await Client(websocket, self.world).run()
+        client = Client(websocket, self.world)
+        Dispatcher.clients[0] = client
+        await client.run()
+        del Dispatcher.clients[0]
         log.info(
             'Client from {}:{} disconnected'.format(host, port)
         )

@@ -31,6 +31,10 @@ var CLIENT = {
 
       revealedtiles: function( data ) {
         WORLD.setRevealedTiles( data.tileids );
+      },
+
+      revealtile: function( data ) {
+        WORLD.revealTile( data.index, data.revealed );
       }
     }
 
@@ -39,6 +43,10 @@ var CLIENT = {
 
   showStatus: function( text ) {
     this.statusDiv.innerHTML = text;
+  },
+
+  revealTile: function( tileId ) {
+    this.send( { name: 'revealtile', index: tileId } )
   },
 
   reconnect: function() {
