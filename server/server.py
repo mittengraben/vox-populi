@@ -5,8 +5,8 @@ import json
 import logging
 import signal
 
+from . import game
 from .version import version
-from .world import World
 from .wsinbox import WSInbox
 
 log = logging.getLogger('main')
@@ -41,8 +41,9 @@ class Server(object):
         )
         logging.basicConfig(level=logging.INFO, format=logformat)
 
-        self.world = World(conf)
-        self.inbox = WSInbox(conf, self.world)
+        game.instance = game.Game(conf)
+        game.instance.add_players()
+        self.inbox = WSInbox(conf)
         self.inbox.run()
 
     def run(self):
@@ -57,7 +58,8 @@ class Server(object):
         except KeyboardInterrupt:
             pass
         finally:
-            self.world.dispose()
+            game.instance.dispose()
+            game.instance = None
             self.inbox.close()
             asyncio.get_event_loop().close()
             log.info('Done')

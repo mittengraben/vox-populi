@@ -2,17 +2,20 @@
 import logging
 import msgpack
 
-from . import tasks
-
+from . import game
 
 log = logging.getLogger(__name__)
 
 
 class Client(object):
-    def __init__(self, websocket, world):
+    def __init__(self, websocket):
         super(Client, self).__init__()
         self.ws = websocket
-        self.world = world
+        self.player = self._auth()
+
+    def _auth(self):
+        game.instance.players[0].client = self
+        return game.instance.players[0]
 
     async def recv(self):
         return msgpack.unpackb(
@@ -38,52 +41,47 @@ class Client(object):
         data = {
             'name': 'worldgeometry'
         }
-        data.update(self.world.get_geometry())
+        data.update(game.instance.world.get_geometry())
         await self.send(data)
 
     async def do_tilemap(self, _):
         data = {
             'name': 'tilemap',
-            'tilemap': self.world.get_tiles()
+            'tilemap': game.instance.world.get_tiles()
         }
         await self.send(data)
 
     async def do_regionmap(self, _):
         data = {
             'name': 'regionmap',
-            'regionmap': self.world.get_regions()
+            'regionmap': game.instance.world.get_regions()
         }
         await self.send(data)
 
     async def do_territoryborder(self, _):
         data = {
             'name': 'territoryborder',
-            'bordermesh': self.world.get_territory_border_mesh(0)
+            'bordermesh': game.instance.world.get_territory_border_mesh(0)
         }
         await self.send(data)
 
     async def do_revealedtiles(self, _):
         data = {
             'name': 'revealedtiles',
-            'tileids': self.world.get_revealed_tiles_for_territory(0)
+            'tileids': self.player.revealed_tiles()
         }
         await self.send(data)
 
     async def do_revealtile(self, cmd):
-        if self.world.reveal_tile(cmd['index'], territory_id=0):
-            self.world.timers.schedule(
-                tasks.HideTileTask(
-                    world=self.world,
-                    player_id=0,
-                    tile_index=cmd['index'],
-                    after=5.0
-                )
-            )
-            await self.send({
-                'name': 'revealtile',
-                'index': cmd['index'],
-                'revealed': True
-            })
+        self.player.reveal_tile(cmd['index'])
+
+    async def notify_reveal_tile(self, index, reveal):
+        await self.send({
+            'name': 'revealtile',
+            'index': index,
+            'revealed': reveal
+        })
 
     def close(self):
+        game.instance.players[0].client = None
         self.ws.close()

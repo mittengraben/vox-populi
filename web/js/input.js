@@ -41,6 +41,7 @@ var INPUT = {
 
     document.addEventListener( 'touchstart', function( evt ) {
       evt.preventDefault();
+      console.log('touchstart')
       if ( evt.touches.length == 1 ) {
           inpObj.clickLag = CONFIG.clickLag;
           inpObj._fromEvent( evt.touches[0], inpObj.currentPos );
@@ -58,6 +59,7 @@ var INPUT = {
     } );
 
     document.addEventListener( 'touchend', function( evt ) {
+      console.log('touchend')
       evt.preventDefault();
       if ( inpObj.clickLag > 0 ) {
         inpObj.click = true;
@@ -68,7 +70,12 @@ var INPUT = {
     } );
 
     document.addEventListener( 'touchcancel', function( evt ) {
+      console.log('touchcancel')
       evt.preventDefault();
+      if ( inpObj.clickLag > 0 ) {
+        inpObj.click = true;
+        inpObj._fromEvent( evt.touches[0], inpObj.clickPos );
+      }
       inpObj.drag = false;
       inpObj.clickLag = -1;
     } );

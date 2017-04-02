@@ -1,9 +1,8 @@
 """Timers"""
 import asyncio
+import collections
 import logging
 import time
-
-from .dispatcher import Dispatcher
 
 log = logging.getLogger(__name__)
 
@@ -25,32 +24,51 @@ class Time(object):
 
 
 class Timers(object):
-    def __init__(self, start_time=0, period=1.25):
+    def __init__(self, start_time=0):
         self._time = Time(start_time)
-        self._ticker = asyncio.Task(self._update(period))
-        self._tasks = []
+        self._ticker = None
+        self._tasks = collections.deque()
 
-    async def _update(self, period):
-        while True:
+    async def _wait_for(self, period):
+        try:
             await asyncio.sleep(period)
-            log.info('Time {}'.format(self._time()))
-            keep = []
-            for task in self._tasks:
-                if await self._dispatch(task):
-                    keep.append(task)
-            self._tasks = keep
+            ctime = self._time()
 
-    async def _dispatch(self, atask):
-        if atask.deadline <= self._time():
-            await Dispatcher.dispatch(atask)
-            self._tasks = [x for x in self._tasks if x is not atask]
-            return False
+            execute = []
+            rest = []
+            for deadline, task in self._tasks:
+                if deadline <= ctime:
+                    execute.append(task)
+                else:
+                    rest.append((deadline, task))
 
-        return True
+            self._tasks = rest
+            for task in execute:
+                task.action(task.target, *task.args)
+
+            if self._tasks:
+                self._ticker = asyncio.get_event_loop().create_task(
+                    self._wait_for(self._tasks[0][0] - self._time())
+                )
+
+        except asyncio.CancelledError:
+            pass
 
     def schedule(self, task):
-        task.deadline = self._time() + task.after
-        self._tasks.append(task)
+        ctime = self._time()
+        deadline = ctime + task.after
+        if deadline <= ctime:
+            task.action(task.target, *task.args)
+        else:
+            self._tasks.append((deadline, task))
+            self._tasks = sorted(self._tasks, key=lambda x: x[0])
+            if deadline <= self._tasks[0][0]:
+                if self._ticker:
+                    self._ticker.cancel()
+                self._ticker = asyncio.get_event_loop().create_task(
+                    self._wait_for(deadline - self._time())
+                )
 
     def stop(self):
-        self._ticker.cancel()
+        if self._ticker:
+            self._ticker.cancel()

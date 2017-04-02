@@ -1,4 +1,5 @@
 """World object"""
+import asyncio
 import logging
 import random
 
@@ -6,14 +7,14 @@ from .hexsphere import Edge
 from .hexsphere import HexSphere
 
 from .territory import Territory
-from .timers import Timers
+from . import game
 
 
 log = logging.getLogger(__name__)
 
 
 class WorldTile(object):
-    __slots__ = ['index', 'geometry', 'region', '_neighbours', 'revealed']
+    __slots__ = ['index', 'geometry', 'region', '_neighbours', 'revealed_for']
 
     def __init__(self, index, geometry):
         super(WorldTile, self).__init__()
@@ -21,7 +22,7 @@ class WorldTile(object):
         self.geometry = geometry
         geometry.world = self
         self.region = None
-        self.revealed = False
+        self.revealed_for = set()
 
         self._neighbours = None
 
@@ -31,6 +32,40 @@ class WorldTile(object):
                 e.neighbour.tile.world for e in self.geometry.edges
             ]
         return self._neighbours
+
+    def _hide_for(self, player):
+        log.info(
+            'hiding tile {} for player {}'.format(self.index, player.index)
+        )
+        self.revealed_for.discard(player.index)
+        if player.client:
+            asyncio.ensure_future(
+                player.client.notify_reveal_tile(self.index, False)
+            )
+
+    def reveal(self, player):
+        if player.index in self.revealed_for:
+            return
+
+        log.info(
+            'showing tile {} for player {}'.format(self.index, player.index)
+        )
+        self.revealed_for.add(player.index)
+        if player.client:
+            asyncio.ensure_future(
+                player.client.notify_reveal_tile(self.index, True)
+            )
+        game.instance.schedule(
+            target=self,
+            action=WorldTile._hide_for,
+            args=[player],
+            after=5.0
+        )
+
+    def visible(self, player):
+        if player.index in self.revealed_for:
+            return True
+        return False
 
 
 class WorldRegion(object):
@@ -99,8 +134,6 @@ class World(object):
         log.info('Tiles {}'.format(len(self.tile_map)))
         log.info('Regions {}'.format(len(self.regions)))
 
-        self.timers = Timers()
-
     def _generate_regions(self, count):
         self.regions = [WorldRegion(i) for i in range(count)]
         seeds = random.sample(self.tile_map, count)
@@ -154,14 +187,3 @@ class World(object):
 
     def get_revealed_tiles_for_territory(self, territory_id):
         return self.territories[territory_id].revealed_tiles()
-
-    def reveal_tile(self, tile_index, territory_id):
-        return self.territories[territory_id].reveal_tile(
-            self.tile_map[tile_index]
-        )
-
-    def hide_tile(self, tile_index):
-        self.tile_map[tile_index].revealed = False
-
-    def dispose(self):
-        self.timers.stop()
